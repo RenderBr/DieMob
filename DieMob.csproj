@@ -63,9 +63,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="DieMobRegion.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Plugin.cs" />
+    <Compile Include="PluginCommands.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegionType.cs" />
   </ItemGroup>

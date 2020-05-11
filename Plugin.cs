@@ -51,7 +51,7 @@ namespace DieMob
 		private static string savepath = Path.Combine(TShock.SavePath, "DieMob/");
 		private static bool initialized = false;
 		private static DateTime lastUpdate = DateTime.UtcNow;
-		private static Config config;
+		public static Config Config;
 
 		public override void Initialize()
 		{
@@ -83,7 +83,7 @@ namespace DieMob
 			catch (Exception ex)
 			{
 				TShock.Log.ConsoleError(ex.Message);
-				config = new Config();
+				Config = new Config();
 			}
 		}
 		public static bool ReadConfig()
@@ -93,7 +93,7 @@ namespace DieMob
 			{
 				if (File.Exists(filepath))
 				{
-					config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(filepath));
+					Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(filepath));
 					return true;
 				}
 				else
@@ -136,7 +136,7 @@ namespace DieMob
 		}
 		private void OnUpdate(EventArgs e)
 		{
-			if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds >= config.UpdateInterval)
+			if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds >= Config.UpdateInterval)
 			{
 				lastUpdate = DateTime.UtcNow;
 				if (!initialized && Main.worldID > 0)
@@ -186,7 +186,7 @@ namespace DieMob
 											int xDir = -10;
 											if (area.Right - (int)(npc.position.X / 16) < area.Width / 2)
 												xDir = 10;
-											npc.velocity = new Vector2(xDir * config.RepelPowerModifier, yDir * config.RepelPowerModifier);
+											npc.velocity = new Vector2(xDir * Config.RepelPowerModifier, yDir * Config.RepelPowerModifier);
 											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
 										}
 										else if (Region.Type == RegionType.Kill)
