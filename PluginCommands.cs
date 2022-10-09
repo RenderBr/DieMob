@@ -39,7 +39,7 @@ namespace DieMob
 				if (args.Parameters.Count < 2)
 					pageNumber = 1;
 				else if (!int.TryParse(args.Parameters[1], out pageNumber))
-					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}dm list <page number>", (args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier));
+					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: {0}dm list <page number>", (args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier));
 
 				if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
 				{
@@ -69,7 +69,7 @@ namespace DieMob
 					args.Player.SendMessage(String.Format("Type: {0}", reg.Type.ToString()), Color.LightSalmon);
 					args.Player.SendMessage(String.Format("Affects friendly NPCs: {0}", reg.AffectFriendlyNPCs ? "True" : "False"), Color.LightSalmon);
 					args.Player.SendMessage(String.Format("Affects statue spawned mobs: {0}", reg.AffectStatueSpawns ? "True" : "False"), Color.LightSalmon);
-					args.Player.SendMessage(String.Format("Replacing {0} mobs. Type '{1}dm replacemobsinfo RegionName [pageNum]' to get a list.", reg.ReplaceMobs.Count, (args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier)), Color.LightSalmon);
+					args.Player.SendMessage(String.Format("Replacing {0} mobs. Type '{1}dm replacemobsinfo RegionName [pageNum]' to get a list.", reg.ReplaceMobs.Count, (args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier)), Color.LightSalmon);
 				}
 				return;
 			}
@@ -215,7 +215,7 @@ namespace DieMob
 						}
 					}
 				}
-				args.Player.SendMessage("{0}dm mod RegionName option arguments".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.DarkOrange);
+				args.Player.SendMessage("{0}dm mod RegionName option arguments".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.DarkOrange);
 				args.Player.SendMessage("Options:", Color.LightSalmon);
 				args.Player.SendMessage("type - args: kill [default] / repel / passive", Color.LightSalmon);
 				args.Player.SendMessage("affectfriendlynpcs - args: true / false [default]", Color.LightSalmon);
@@ -263,11 +263,11 @@ namespace DieMob
 					return;
 				}
 			}
-			args.Player.SendMessage("Syntax: {0}diemob [add | del] RegionName - Creates / Deletes DieMob region based on pre-existing region".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.LightSalmon);
-			args.Player.SendMessage("Syntax: {0}diemob list [page number] - Lists DieMob regions".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.LightSalmon);
-			args.Player.SendMessage("Syntax: {0}diemob reload - Reloads config.json file".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.LightSalmon);
-			args.Player.SendMessage("Syntax: {0}diemob mod RegionName - Modifies a DieMob region".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.LightSalmon);
-			args.Player.SendMessage("Syntax: {0}diemob info RegionName - Displays info for a DieMob region".SFormat(args.Silent ? TShock.Config.CommandSilentSpecifier : TShock.Config.CommandSpecifier), Color.LightSalmon);
+			args.Player.SendMessage("Syntax: {0}diemob [add | del] RegionName - Creates / Deletes DieMob region based on pre-existing region".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.LightSalmon);
+			args.Player.SendMessage("Syntax: {0}diemob list [page number] - Lists DieMob regions".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.LightSalmon);
+			args.Player.SendMessage("Syntax: {0}diemob reload - Reloads config.json file".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.LightSalmon);
+			args.Player.SendMessage("Syntax: {0}diemob mod RegionName - Modifies a DieMob region".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.LightSalmon);
+			args.Player.SendMessage("Syntax: {0}diemob info RegionName - Displays info for a DieMob region".SFormat(args.Silent ? TShock.Config.Settings.CommandSilentSpecifier : TShock.Config.Settings.CommandSpecifier), Color.LightSalmon);
 		}
 	}
 }
