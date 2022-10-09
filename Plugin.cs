@@ -169,12 +169,12 @@ namespace DieMob
 									{
 										if (Region.ReplaceMobs.ContainsKey(npc.netID))
 										{
-											npc.SetDefaults(Region.ReplaceMobs[npc.netID]);
+											TSPlayer.Server.StrikeNPC(i, (int)(npc.life * 100), 0, 0);
 											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
 										}
 										else if (Region.ReplaceMobs.ContainsKey(-100))
 										{
-											npc.SetDefaults(Region.ReplaceMobs[-100]);
+											TSPlayer.Server.StrikeNPC(i, (int)(npc.life * 100), 0, 0);
 											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
 										}
 										else if (Region.Type == RegionType.Repel)
