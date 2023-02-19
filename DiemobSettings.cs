@@ -1,0 +1,22 @@
+﻿using Auxiliary.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace DieMob
+{
+    public class DiemobSettings : ISettings
+    {
+        [JsonPropertyName("UpdateInterval")]
+        public int UpdateInterval { get; set; }
+
+        [JsonPropertyName("RepelPowerModifier")]
+        public float RepelPowerModifier { get; set; }
+
+        [JsonPropertyName("RegionStretch")]
+        public int RegionStretch { get; set; }
+    }
+}

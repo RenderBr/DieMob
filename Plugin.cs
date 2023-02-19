@@ -14,198 +14,116 @@ using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.DB;
 using TShockAPI.Hooks;
+using Auxiliary.Configuration;
+using DieMob.Api;
+using CSF.TShock;
+using CSF;
 
 namespace DieMob
 {
 
 
-	[ApiVersion(2, 1)]
+    [ApiVersion(2, 1)]
 	public class Plugin : TerrariaPlugin
 	{
-		#region Info
+		#region Plugin Metadata
 		public override string Name
-		{
-			get { return "DieMob Regions"; }
-		}
+			=> "DieMob Regions";
+
 		public override string Author
-		{
-			get { return "Zaicon"; }
-		}
+			=> "Average";
+
 		public override string Description
-		{
-			get { return "Adds monster protection option to regions"; }
-		}
+			=> "Removes any entities that decide to enter a region";
+
 		public override Version Version
-		{
-			get { return Assembly.GetExecutingAssembly().GetName().Version; }
-		}
+			=> new Version(1, 0);
+			
 		#endregion
 
-		#region Initialize
+		#region Plugin Initialization
 		public Plugin(Main game)
 			: base(game)
 		{
 			Order = 1;
-		}
+            // Define the command standardization framework made for TShock.
+            _fx = new(new CommandConfiguration()
+            {
+                DoAsynchronousExecution = false
+            });
+        }
+        private readonly TSCommandFramework _fx;
+        private static DateTime lastUpdate = DateTime.UtcNow;
+		public static DiemobSettings Settings;
+		public static DiemobApi api;
 
-		private static string savepath = Path.Combine(TShock.SavePath, "DieMob/");
-		private static bool initialized = false;
-		private static DateTime lastUpdate = DateTime.UtcNow;
-		public static Config Config;
-
-		public override void Initialize()
+		public async override void Initialize()
 		{
-			ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
-			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize, 1);
+            Configuration<DiemobSettings>.Load(nameof(DieMob));
+			Settings = Configuration<DiemobSettings>.Settings;
+            await _fx.BuildModulesAsync(typeof(Plugin).Assembly);
+            
+            GeneralHooks.ReloadEvent += (x) =>
+            {
+                Configuration<DiemobSettings>.Load(nameof(DieMob));
+                x.Player.SendSuccessMessage("[Diemob] Reloaded configuration.");
+            };
+
+            ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
 			RegionHooks.RegionDeleted += OnRegionDelete;
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
-				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
-				RegionHooks.RegionDeleted -= OnRegionDelete;
-			}
-			base.Dispose(disposing);
-		}
-
-		#endregion
-		public static void CreateConfig()
-		{
-			string filepath = Path.Combine(savepath, "config.json");
-
-			try
-			{
-				File.WriteAllText(filepath, JsonConvert.SerializeObject(new Config(), Formatting.Indented));
-			}
-			catch (Exception ex)
-			{
-				TShock.Log.ConsoleError(ex.Message);
-				Config = new Config();
-			}
-		}
-		public static bool ReadConfig()
-		{
-			string filepath = Path.Combine(savepath, "config.json");
-			try
-			{
-				if (File.Exists(filepath))
-				{
-					Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(filepath));
-					return true;
-				}
-				else
-				{
-					TShock.Log.ConsoleError("DieMob config not found. Creating new one");
-					CreateConfig();
-					return false;
-				}
-			}
-			catch (Exception ex)
-			{
-				TShock.Log.ConsoleError(ex.Message);
-			}
-			return false;
-		}
+			api = new DiemobApi();
 
 
-		#region Hooks
-		private void OnRegionDelete(RegionHooks.RegionDeletedEventArgs args)
-		{
-			if (Database.DieMobRegions.Exists(p => p.TSRegion.Name == args.Region.Name))
-			{
-				Database.DieMob_Delete(args.Region.Name);
-			}
-		}
-		void OnInitialize(EventArgs e)
-		{
-			if (!Directory.Exists(savepath))
-			{
-				Directory.CreateDirectory(savepath);
-				CreateConfig();
-			}
-			ReadConfig();
-			Commands.ChatCommands.Add(new Command("diemob", PluginCommands.DieMobCommand, "diemob", "DieMob", "dm"));
-			Database.Connect();
-		}
-		private static void OnWorldLoad()
-		{
-			Database.DieMob_Read();
-		}
-		private void OnUpdate(EventArgs e)
-		{
-			if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds >= Config.UpdateInterval)
-			{
-				lastUpdate = DateTime.UtcNow;
-				if (!initialized && Main.worldID > 0)
-				{
-					initialized = true;
-					OnWorldLoad();
-				}
-				try
-				{
-					for (int r = 0; r < Database.DieMobRegions.Count; r++)
-					{
-						Region reg = TShock.Regions.GetRegionByName(Database.DieMobRegions[r].TSRegion.Name);
-						if (reg == null)
-						{
-							Database.DieMob_Delete(Database.DieMobRegions[r].TSRegion.Name);
-							continue;
-						}
-						DieMobRegion Region = Database.DieMobRegions[r];
-						Region.TSRegion = reg;
-						for (int i = 0; i < Main.npc.Length; i++)
-						{
-							if (Main.npc[i].active)
-							{
-								NPC npc = Main.npc[i];
-								if ((npc.friendly && Region.AffectFriendlyNPCs && npc.netID != 488) ||
-									(!npc.friendly && npc.SpawnedFromStatue && Region.AffectStatueSpawns && npc.netID != 488 && npc.catchItem == 0) ||
-									(!npc.friendly && !npc.SpawnedFromStatue && npc.netID != 488 && npc.catchItem == 0))
-								{
-									if (Region.TSRegion.InArea((int)(Main.npc[i].position.X / 16), (int)(Main.npc[i].position.Y / 16)))
-									{
-										if (Region.ReplaceMobs.ContainsKey(npc.netID))
-										{
-											TSPlayer.Server.StrikeNPC(i, (int)(npc.life * 100), 0, 0);
-											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
-										}
-										else if (Region.ReplaceMobs.ContainsKey(-100))
-										{
-											TSPlayer.Server.StrikeNPC(i, (int)(npc.life * 100), 0, 0);
-											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
-										}
-										else if (Region.Type == RegionType.Repel)
-										{
-											Rectangle area = Region.TSRegion.Area;
-											int yDir = -10;
-											if (area.Bottom - (int)(npc.position.Y / 16) < area.Height / 2)
-												yDir = 10;
-											int xDir = -10;
-											if (area.Right - (int)(npc.position.X / 16) < area.Width / 2)
-												xDir = 10;
-											npc.velocity = new Vector2(xDir * Config.RepelPowerModifier, yDir * Config.RepelPowerModifier);
-											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
-										}
-										else if (Region.Type == RegionType.Kill)
-										{
-											Main.npc[i] = new NPC();
-											NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, i);
-										}
-									}
-								}
-							}
-						}
-					}
+        }
+        #endregion
 
-				}
-				catch (Exception ex)
-				{
-					TShock.Log.ConsoleError(ex.ToString());
-				}
-			}
+
+        #region Hooks
+        private async void OnRegionDelete(RegionHooks.RegionDeletedEventArgs args)
+		{
+			DieMobRegion region = await api.RetrieveRegion(args.Region.Name);
+
+			if (region != null)
+				api.DeleteDiemob(args.Region.Name);
+		}
+		
+		private async void OnUpdate(EventArgs e)
+		{
+			if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds >= Settings.UpdateInterval)
+			{
+                lastUpdate = DateTime.UtcNow;
+                foreach (var region in TShock.Regions.Regions)
+                {
+                        DieMobRegion dmRegion = await api.RetrieveRegion(region.Name);
+                        if (dmRegion != null)
+                        {
+                            foreach (var npc in Main.npc)
+                            {
+                                if (npc.active && !npc.townNPC)
+                                {
+                                Console.WriteLine(npc.position.X/16 + " " + npc.position.Y/16);
+                                    if (!(region.InArea((int)(npc.position.X/16), (int)(npc.position.Y/16))))
+                                    {
+                                        return;
+                                    }
+                                    Console.WriteLine("A");
+                                    if (region.Area.Contains(npc.Center.ToTileCoordinates()))
+                                    {
+                                        Console.WriteLine("BOOP");
+                                        npc.active = false;
+                                        npc.life = 0;
+                                        npc.lifeMax = 0;
+                                        npc.checkDead();
+                                        Main.npc[npc.whoAmI] = new NPC();
+                                        NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npc.whoAmI);
+                                    }
+                                }
+                            }
+                        }
+                    
+                }
+
+            }
 		}
 		#endregion
 
