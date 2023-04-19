@@ -6,7 +6,9 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <Folder Include="References\" />
+    <Compile Remove="References\**" />
+    <EmbeddedResource Remove="References\**" />
+    <None Remove="References\**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CSF.NET.TShock" Version="1.4.1" />

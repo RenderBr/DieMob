@@ -16,7 +16,7 @@ namespace DieMob.Api
 
         public List<DieMobRegion> RetrieveAllRegions()
         {
-            return StorageProvider.GetMongoCollection<DieMobRegion>("DieMobRegions").Find(x=>true).ToList();
+            return StorageProvider.GetMongoCollection<DieMobRegion>("DieMobRegions").Find(x => true).ToList();
 
         }
 
@@ -27,7 +27,7 @@ namespace DieMob.Api
 
 
         public async Task<DieMobRegion> CreateDieMobRegion(string regionName)
-            => await IModel.GetAsync(GetRequest.Bson<DieMobRegion>(x => x.Region == regionName), x=>
+            => await IModel.GetAsync(GetRequest.Bson<DieMobRegion>(x => x.Region == regionName), x =>
             {
                 x.Region = TShock.Regions.GetRegionByName(regionName).Name;
                 x.AffectFriendlyNPCs = false;
@@ -36,6 +36,6 @@ namespace DieMob.Api
                 x.Type = RegionType.Kill;
             });
 
-       
+
     }
 }
