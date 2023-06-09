@@ -6,6 +6,7 @@ using DieMob.Api;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Terraria;
 using Terraria.Localization;
 using TerrariaApi.Server;
@@ -14,8 +15,6 @@ using TShockAPI.Hooks;
 
 namespace DieMob
 {
-
-
     [ApiVersion(2, 1)]
     public class Plugin : TerrariaPlugin
     {
@@ -30,12 +29,12 @@ namespace DieMob
             => "Removes any entities that decide to enter a region";
 
         public override Version Version
-            => new(1, 0);
+            => new Version(1, 1);
 
-        #endregion
+		#endregion
 
-        #region Plugin Initialization
-        public Plugin(Main game)
+		#region Plugin Initialization
+		public Plugin(Main game)
             : base(game)
         {
             Order = 1;
