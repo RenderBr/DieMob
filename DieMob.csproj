@@ -13,6 +13,6 @@
   <ItemGroup>
     <PackageReference Include="CSF.NET.TShock" Version="1.4.1" />
     <PackageReference Include="TBC.Extensions.Auxiliary" Version="1.2.0" />
-    <PackageReference Include="TShock" Version="5.1.3" />
+    <PackageReference Include="TShock" Version="5.2.0" />
   </ItemGroup>
 </Project>
