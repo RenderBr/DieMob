@@ -4,6 +4,7 @@ using CSF;
 using CSF.TShock;
 using DieMob.Api;
 using MongoDB.Driver;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -29,7 +30,7 @@ namespace DieMob
             => "Removes any entities that decide to enter a region";
 
         public override Version Version
-            => new Version(1, 1);
+            => new Version(1, 2);
 
 		#endregion
 
@@ -47,10 +48,12 @@ namespace DieMob
         private readonly TSCommandFramework _fx;
         private static DateTime lastUpdate = DateTime.UtcNow;
         public static DiemobSettings Settings;
-        public static DiemobApi api;
+        public static DiemobApi api = new();
 
         public async override void Initialize()
         {
+            api.SQL = new SQLiteAsyncConnection(api.dbPath);
+            await api.SQL.CreateTableAsync<DieMobRegion>();
             Configuration<DiemobSettings>.Load(nameof(DieMob));
             Settings = Configuration<DiemobSettings>.Settings;
             await _fx.BuildModulesAsync(typeof(Plugin).Assembly);
@@ -63,7 +66,6 @@ namespace DieMob
 
             TerrariaApi.Server.ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
             RegionHooks.RegionDeleted += OnRegionDelete;
-            api = new DiemobApi();
 
 
         }
@@ -84,7 +86,7 @@ namespace DieMob
             if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds >= Settings.UpdateInterval)
             {
                 lastUpdate = DateTime.UtcNow;
-                List<DieMobRegion> regions = StorageProvider.GetMongoCollection<DieMobRegion>("DieMobRegions").Find(x => true).ToList();
+                List<DieMobRegion> regions = await api.SQL.Table<DieMobRegion>().ToListAsync();
                 foreach (var r in regions)
                 {
                     var region = TShock.Regions.GetRegionByName(r.Region);

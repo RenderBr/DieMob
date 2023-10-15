@@ -1,7 +1,7 @@
-﻿using Auxiliary;
-using Auxiliary.Configuration;
-using MongoDB.Driver;
+﻿using Auxiliary.Configuration;
+using SQLite;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using TShockAPI;
 
@@ -9,22 +9,20 @@ namespace DieMob.Api
 {
 	public class DiemobApi
 	{
+        public string dbPath = Path.Combine(TShock.SavePath, "diemob.sqlite");
+        public SQLiteAsyncConnection SQL;
+		public async Task DeleteDiemob(string regionName) => await SQL.Table<DieMobRegion>().DeleteAsync(x=>x.Region==regionName);
 
-		public void DeleteDiemob(string regionName) => StorageProvider.GetMongoCollection<DieMobRegion>("DieMobRegions").FindOneAndDeleteAsync(x => x.Region == regionName);
+		public async Task<List<DieMobRegion>> RetrieveAllRegions() => await SQL.Table<DieMobRegion>().ToListAsync();
 
-		public List<DieMobRegion> RetrieveAllRegions() => StorageProvider.GetMongoCollection<DieMobRegion>("DieMobRegions").Find(x => true).ToList();
-
-		public async Task<DieMobRegion> RetrieveRegion(string regionName) => await IModel.GetAsync(GetRequest.Bson<DieMobRegion>(x => x.Region == regionName));
+		public async Task<DieMobRegion>? RetrieveRegion(string regionName) => await SQL.Table<DieMobRegion>().FirstOrDefaultAsync(x => x.Region == regionName);
 
 
-		public async Task<DieMobRegion> CreateDieMobRegion(string regionName)
-			=> await IModel.GetAsync(GetRequest.Bson<DieMobRegion>(x => x.Region == regionName), x =>
+		public async Task CreateDieMobRegion(string regionName)
+			=> await SQL.InsertAsync(new DieMobRegion
 			{
-				x.Region = TShock.Regions.GetRegionByName(regionName).Name;
-				x.AffectFriendlyNPCs = false;
-				x.AffectStatueSpawns = true;
-				x.ReplaceMobs = new();
-				x.Type = RegionType.Kill;
+				Region = regionName,
+				Type = RegionType.Kill
 			});
 
 		public void ReloadDieMob() => Configuration<DiemobSettings>.Load(nameof(DieMob));

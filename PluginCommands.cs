@@ -20,26 +20,26 @@ namespace DieMob
                 case "wipe":
                 case "clear":
                     {
-                        var regions = Plugin.api.RetrieveAllRegions();
+                        var regions = await Plugin.api.RetrieveAllRegions();
                         foreach (DieMobRegion r in regions)
                         {
-                            Plugin.api.DeleteDiemob(r.Region);
+                            await Plugin.api.DeleteDiemob(r.Region);
                         }
                         return Success("All DieMob regions cleared.");
                     }
                 case "list":
                     {
-                        var regions = Plugin.api.RetrieveAllRegions();
+                        var regions = await Plugin.api.RetrieveAllRegions();
 
                         foreach (DieMobRegion r in regions)
                         {
                             if (TShock.Regions.GetRegionByName(r.Region) == null)
-                                Plugin.api.DeleteDiemob(r.Region);
+                                await Plugin.api.DeleteDiemob(r.Region);
                         }
 
                         int pageNumber;
 
-                        if (!string.IsNullOrEmpty(args1))
+                        if (string.IsNullOrWhiteSpace(args1))
                             pageNumber = 1;
                         else
                         {
@@ -57,7 +57,8 @@ namespace DieMob
                             new PaginationTools.Settings
                             {
                                 HeaderFormat = "DieMob Regions ({0}/{1}):",
-                                FooterFormat = "Type /diemob list {0} for more."
+                                FooterFormat = "Type /diemob list {0} for more.",
+                                NothingToDisplayString = "There are currently no diemob regions!"
                             });
                         return ExecuteResult.FromSuccess();
                     }
@@ -68,7 +69,7 @@ namespace DieMob
                         {
                             if (!TShock.Regions.GetRegionByName(args1).Equals(null))
                             {
-                                if (Plugin.api.RetrieveRegion(args1) == null)
+                                if (await Plugin.api.RetrieveRegion(args1) == null)
                                 {
                                     await Plugin.api.CreateDieMobRegion(args1);
                                     return Success($"DieMob region {args1} added.");
@@ -88,7 +89,7 @@ namespace DieMob
                         {
                             if (!TShock.Regions.GetRegionByName(args1).Equals(null))
                             {
-                                Plugin.api.DeleteDiemob(args1);
+                                await Plugin.api.DeleteDiemob(args1);
                                 return Success($"You successfully deleted {args1} from diemob!");
                             }
                             else return Error("Please enter a valid region name!");
@@ -97,6 +98,7 @@ namespace DieMob
                         else return Error("Please enter a valid region name!");
 
                     }
+                case "":
                 case "help":
                     {
                         Info("Diemob Commands");

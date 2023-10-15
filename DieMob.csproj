@@ -12,6 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CSF.NET.TShock" Version="1.4.1" />
+    <PackageReference Include="sqlite-net" Version="1.6.292" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
     <PackageReference Include="TBC.Extensions.Auxiliary" Version="1.2.0" />
     <PackageReference Include="TShock" Version="5.2.0" />
   </ItemGroup>
