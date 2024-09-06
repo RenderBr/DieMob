@@ -33,7 +33,7 @@ namespace DieMob
             => "Removes any entities that decide to enter a region";
 
         public override Version Version
-            => new Version(1, 2);
+            => new Version(1, 3);
 
         #endregion
 

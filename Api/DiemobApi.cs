@@ -15,7 +15,7 @@ namespace DieMob.Api
 
 		public async Task<List<DieMobRegion>> RetrieveAllRegions() => await SQL.Table<DieMobRegion>().ToListAsync();
 
-		public async Task<DieMobRegion>? RetrieveRegion(string regionName) => await SQL.Table<DieMobRegion>().FirstOrDefaultAsync(x => x.Region == regionName);
+		public async Task<DieMobRegion?> RetrieveRegion(string regionName) => await SQL.Table<DieMobRegion>().FirstOrDefaultAsync(x => x.Region == regionName);
 
 
 		public async Task CreateDieMobRegion(string regionName)
