@@ -8,10 +8,12 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Localization;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.DB;
 using TShockAPI.Hooks;
 
 namespace DieMob
@@ -20,6 +22,7 @@ namespace DieMob
     public class Plugin : TerrariaPlugin
     {
         #region Plugin Metadata
+
         public override string Name
             => "DieMob Regions";
 
@@ -32,10 +35,11 @@ namespace DieMob
         public override Version Version
             => new Version(1, 2);
 
-		#endregion
+        #endregion
 
-		#region Plugin Initialization
-		public Plugin(Main game)
+        #region Plugin Initialization
+
+        public Plugin(Main game)
             : base(game)
         {
             Order = 1;
@@ -45,6 +49,7 @@ namespace DieMob
                 DoAsynchronousExecution = false
             });
         }
+
         private readonly TSCommandFramework _fx;
         private static DateTime lastUpdate = DateTime.UtcNow;
         public static DiemobSettings Settings;
@@ -66,13 +71,12 @@ namespace DieMob
 
             TerrariaApi.Server.ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
             RegionHooks.RegionDeleted += OnRegionDelete;
-
-
         }
+
         #endregion
 
-
         #region Hooks
+
         private async void OnRegionDelete(RegionHooks.RegionDeletedEventArgs args)
         {
             DieMobRegion region = await api.RetrieveRegion(args.Region.Name);
@@ -98,27 +102,42 @@ namespace DieMob
                         if (npc.active && !npc.townNPC)
                         {
                             if (!region.InArea((int)(npc.position.X / 16), (int)(npc.position.Y / 16)))
+                            {
                                 continue;
+                            }
 
                             if (region.Area.Contains(npc.Center.ToTileCoordinates()))
                             {
-                                npc.active = false;
-                                npc.life = 0;
-                                npc.lifeMax = 0;
-                                npc.checkDead();
-                                Main.npc[npc.whoAmI] = new NPC();
-                                NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npc.whoAmI);
+                                if (r.Type == RegionType.Kill)
+                                {
+                                    npc.active = false;
+                                    npc.life = 0;
+                                    npc.lifeMax = 0;
+                                    npc.checkDead();
+                                    Main.npc[npc.whoAmI] = new NPC();
+                                    NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty,
+                                        npc.whoAmI);
+                                }
+                                else if (r.Type == RegionType.Repel)
+                                {
+                                    Rectangle area = region.Area;
+                                    int yDir = -10;
+                                    if (area.Bottom - (int)(npc.position.Y / 16) < area.Height / 2)
+                                        yDir = 10;
+                                    int xDir = -10;
+                                    if (area.Right - (int)(npc.position.X / 16) < area.Width / 2)
+                                        xDir = 10;
+                                    npc.velocity = new Vector2(xDir * Settings.RepelPowerModifier,
+                                        yDir * Settings.RepelPowerModifier);
+                                    NetMessage.SendData((int)PacketTypes.NpcUpdate, -1, -1, NetworkText.Empty, npc.whoAmI);
+                                }
                             }
                         }
                     }
-
-
                 }
-
             }
         }
+
         #endregion
-
     }
-
 }
